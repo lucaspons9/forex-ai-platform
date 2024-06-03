@@ -169,6 +169,8 @@ class DatabaseManager:
         Returns:
         Optional[str]: The latest 'updated_at' date as a string, or None if no dates are found.
         """
+        if table_name not in self.get_existing_tables():
+            return None
         conn = psycopg2.connect(
             host=self.db_host,
             user=self.db_user,
