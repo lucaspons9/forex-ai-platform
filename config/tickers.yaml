@@ -1,0 +1,5 @@
+currencies:
+  - EUR
+  - USD
+pairs:
+  - EURUSD
