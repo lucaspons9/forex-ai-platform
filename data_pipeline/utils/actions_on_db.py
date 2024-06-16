@@ -1,11 +1,13 @@
 import os
 import time
+from datetime import datetime
 from typing import Dict, List, Optional
 
 import pandas as pd
 import psycopg2
 from psycopg2 import OperationalError
 
+from utils.configs import read_config
 from utils.logger import configure_logger
 
 LOGGER = configure_logger(__file__)
@@ -18,9 +20,10 @@ class DatabaseManager:
         self.db_password: str = os.getenv("DB_PASSWORD")
         LOGGER.info(f"password {self.db_password}")
         self.db_name: str = os.getenv("DB_NAME")
+        self.sql_commands = read_config(file_path="config/sql_commands.yaml")
 
-    def wait_for_postgres(self, timeout: int = 60) -> bool:
-        """Wait for PostgreSQL to be ready before proceeding."""
+    def postgres_running_check(self, timeout: int = 60) -> bool:
+        """Wait for PostgreSQL to be ready before proceeding. Return True when it is running."""
         start_time = time.time()
         while True:
             try:
@@ -52,32 +55,56 @@ class DatabaseManager:
             dbname=self.db_name,
         )
         cur = conn.cursor()
-
-        cur.execute(
-            """
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public';
-        """
-        )
+        get_tables_sql = self.sql_commands["get_existing_tables"]
+        cur.execute(get_tables_sql)
         existing_tables = [row[0] for row in cur.fetchall()]
-
         cur.close()
         conn.close()
-
         return existing_tables
 
-    def create_tables(self, tickers: Dict[str, List[str]]) -> None:
-        """Create tables in the PostgreSQL database as specified in the config file.
+    def create_table(self, table_name: str, df: pd.DataFrame):
+        conn = psycopg2.connect(
+            host=self.db_host,
+            user=self.db_user,
+            password=self.db_password,
+            dbname=self.db_name,
+        )
+        cur = conn.cursor()
+        columns = ", ".join(
+            [
+                f"{col} DOUBLE PRECISION"
+                for col in df.columns
+                if col != "date" and col != "Date"
+            ]
+        )
+        create_table_sql = self.sql_commands["create_table"].format(
+            table_name=table_name, columns=columns
+        )
+        cur.execute(create_table_sql)
+        conn.commit()
+        cur.close()
+        conn.close()
 
-        Parameters:
-        config_path (str): The path to the YAML configuration file containing table names.
-        """
-        tables: List[str] = [
-            table for tables_list in tickers.values() for table in tables_list
-        ]
+    def upload_to_db(
+        self, extracted_data_dict: Dict[str, Dict[str, Dict[str, pd.DataFrame]]]
+    ):
         existing_tables = self.get_existing_tables()
 
+        for category, data_types in extracted_data_dict.items():
+            for data_type, data in data_types.items():
+                for name, df in data.items():
+                    table_name = f"{category}_{data_type}_{name}".lower()
+
+                    if table_name not in existing_tables:
+                        self.create_table(table_name, df)
+
+                    self.insert_data(table_name, df)
+
+                    LOGGER.warning(
+                        f"Successfully uploaded data to table: {table_name}."
+                    )
+
+    def insert_data(self, table_name: str, df: pd.DataFrame):
         conn = psycopg2.connect(
             host=self.db_host,
             user=self.db_user,
@@ -86,89 +113,42 @@ class DatabaseManager:
         )
         cur = conn.cursor()
 
-        for table in tables:
-            if table not in existing_tables:
-                cur.execute(
-                    f"""
-                    CREATE TABLE "{table}" (
-                        id SERIAL PRIMARY KEY,
-                        date DATE,
-                        close FLOAT,
-                        high FLOAT,
-                        low FLOAT,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    );
-                """
-                )
+        for index, row in df.iterrows():
+            values = []
+            for col in df.columns:
+                value = row[col]
+                if pd.isna(value):
+                    values.append("NULL")
+                elif isinstance(value, datetime):
+                    values.append(f"'{value.strftime('%Y-%m-%d')}'")
+                elif isinstance(value, str):
+                    values.append(f"'{value}'")
+                else:
+                    values.append(str(value))
+
+            columns = ", ".join([col for col in df.columns])
+            values_str = ", ".join(values)
+            update_columns = ", ".join(
+                [
+                    f"{col} = EXCLUDED.{col}"
+                    for col in df.columns
+                    if col.lower() != "date"
+                ]
+            )
+
+            insert_data_sql = self.sql_commands["insert_data"].format(
+                table_name=table_name,
+                columns=columns,
+                values=values_str,
+                update_columns=update_columns,
+            )
+            cur.execute(insert_data_sql)
 
         conn.commit()
         cur.close()
         conn.close()
 
-    def add_column(self, table_name: str, column_name: str, data_type: str) -> None:
-        """Add a new column to an existing table.
-
-        Parameters:
-        table_name (str): The name of the table to modify.
-        column_name (str): The name of the new column to add.
-        data_type (str): The data type of the new column.
-        """
-        conn = psycopg2.connect(
-            host=self.db_host,
-            user=self.db_user,
-            password=self.db_password,
-            dbname=self.db_name,
-        )
-        cur = conn.cursor()
-
-        cur.execute(
-            f"""
-            ALTER TABLE "{table_name}" ADD COLUMN IF NOT EXISTS "{column_name}" {data_type};
-        """
-        )
-
-        conn.commit()
-        cur.close()
-        conn.close()
-
-    def upload_to_db(self, data: Dict[str, pd.DataFrame]) -> None:
-        """
-        Uploads data from a dictionary of DataFrames to the specified tables in the PostgreSQL database.
-
-        Parameters:
-        data (Dict[str, pd.DataFrame]): A dictionary where keys are table names and values are DataFrames
-                                        containing the data to be uploaded to the corresponding tables.
-
-        Each DataFrame's rows are converted to JSON format and inserted into the 'data' column of the specified table.
-        Assumes that the table structure includes a 'data' column of type JSONB.
-        """
-        conn = psycopg2.connect(
-            host=self.db_host,
-            user=self.db_user,
-            password=self.db_password,
-            dbname=self.db_name,
-        )
-        cur = conn.cursor()
-        for table_name, df in data.items():
-            for _, row in df.iterrows():
-                cur.execute(
-                    f"""
-                        INSERT INTO "{table_name}" (close, high, low) VALUES (%s, %s, %s)
-                        """,
-                    (row["Close"], row["High"], row["Low"]),
-                )
-        conn.commit()
-        cur.close()
-        conn.close()
-
-        LOGGER.info(f"Successfully uploaded data to tables: {list(data.keys())}.")
-
-    def get_latest_date(self, table_name) -> Optional[str]:
-        """Get the latest 'created_at' date across all tables in the PostgreSQL database.
-
-        Returns:
-        Optional[str]: The latest 'updated_at' date as a string, or None if no dates are found.
-        """
+    def get_latest_date(self, table_name: str) -> Optional[str]:
         if table_name not in self.get_existing_tables():
             return None
         conn = psycopg2.connect(
@@ -178,18 +158,11 @@ class DatabaseManager:
             dbname=self.db_name,
         )
         cur = conn.cursor()
-        cur.execute(
-            f"""
-            SELECT MAX(updated_at) FROM "{table_name}";
-        """
+        get_latest_date_sql = self.sql_commands["get_latest_date"].format(
+            table_name=table_name
         )
-        date = cur.fetchone()[0]
+        cur.execute(get_latest_date_sql)
+        latest_date = cur.fetchone()[0]
         cur.close()
         conn.close()
-        return date
-
-
-# Usage Example:
-# db_manager = DatabaseManager()
-# latest_date = db_manager.get_latest_date('test1')
-# print(latest_date)
+        return latest_date

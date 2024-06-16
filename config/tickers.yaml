@@ -1,5 +1,9 @@
-currencies:
-  - EUR
-  - USD
 pairs:
   - EURUSD
+#  - USDJPY
+#  - GBPUSD
+#  - AUDUSD
+#  - USDCAD
+#  - USDCNY
+#  - USDCHF
+#  - EURGBP
