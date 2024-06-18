@@ -18,7 +18,6 @@ class DatabaseManager:
         self.db_host: str = os.getenv("DB_HOST")
         self.db_user: str = os.getenv("DB_USER")
         self.db_password: str = os.getenv("DB_PASSWORD")
-        LOGGER.info(f"password {self.db_password}")
         self.db_name: str = os.getenv("DB_NAME")
         self.sql_commands = read_config(file_path="config/sql_commands.yaml")
 

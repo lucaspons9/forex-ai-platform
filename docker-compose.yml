@@ -18,7 +18,7 @@ services:
       context: .
       dockerfile: data_pipeline/Dockerfile
     environment:
-      DB_HOST: ${DB_HOST}
+      DB_HOST: db
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -28,6 +28,23 @@ services:
       - pipeline-data:/app/data
     depends_on:
       - db
+
+  web:
+    build:
+      context: .
+      dockerfile: app/Dockerfile
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      FAST_API_KEY: ${FAST_API_KEY}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./config:/app/config
 
 volumes:
   db-data:
