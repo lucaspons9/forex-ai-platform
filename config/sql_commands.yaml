@@ -12,3 +12,5 @@ get_existing_tables: |
   WHERE table_schema = 'public';
 get_latest_date: |
   SELECT MAX(date) FROM {table_name};
+get_top_rows: |
+  SELECT * FROM {table_name} LIMIT {n}

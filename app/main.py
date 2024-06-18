@@ -19,6 +19,14 @@ API_KEY = os.getenv("FAST_API_KEY")
 
 LOGGER = configure_logger(__file__)
 
+# Database connection settings
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+
+SQL_COMMANDS = read_config(file_path="/app/config/sql_commands.yaml")
+
 # Dependency function to validate API key
 def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
     if api_key_header == API_KEY:
@@ -27,15 +35,9 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
         raise HTTPException(status_code=403, detail="Could not validate credentials")
 
 
-class SQLQuery(BaseModel):
-    query: str
-
-
-# Database connection settings
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
+class TableQuery(BaseModel):
+    table_name: str
+    n: int
 
 
 def get_db_connection():
@@ -65,9 +67,7 @@ def get_existing_tables(api_key: APIKey = Depends(get_api_key)):
     """List all existing tables in the database."""
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    get_tables_sql = read_config(file_path="/app/config/sql_commands.yaml").get(
-        "get_existing_tables"
-    )
+    get_tables_sql = SQL_COMMANDS.get("get_existing_tables")
     cursor.execute(get_tables_sql)
     tables = [table["table_name"] for table in cursor.fetchall()]
     cursor.close()
@@ -84,9 +84,7 @@ def get_latest_date(api_key: APIKey = Depends(get_api_key)):
     latest_dates = {}
     # import os
     # LOGGER.critical(f"Current path: \n{os.getcwd()}, directories: {os.listdir(os.getcwd())}")
-    latest_date_sql = read_config(file_path="/app/config/sql_commands.yaml").get(
-        "get_latest_date"
-    )
+    latest_date_sql = SQL_COMMANDS.get("get_latest_date")
     for table in tables:
         cursor.execute(latest_date_sql.format(table_name=table))
         latest_date = cursor.fetchone()["max"]
@@ -96,18 +94,17 @@ def get_latest_date(api_key: APIKey = Depends(get_api_key)):
     return {"latest_dates": latest_dates}
 
 
-@app.post("/query")
-def execute_sql_query(sql_query: SQLQuery, api_key: APIKey = Depends(get_api_key)):
-    """Execute a provided SQL query on the database."""
+@app.post("/top-rows")
+def get_top_rows(table_query: TableQuery, api_key: APIKey = Depends(get_api_key)):
+    """Get the top n rows of a specified table."""
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     try:
-        cursor.execute(sql_query.query)
-        if sql_query.query.strip().lower().startswith("select"):
-            result = cursor.fetchall()
-        else:
-            conn.commit()
-            result = {"status": "success"}
+        query = SQL_COMMANDS.get("get_top_rows").format(
+            table_name=table_query.table_name, n=table_query.n
+        )
+        cursor.execute(query)
+        result = cursor.fetchall()
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     finally:
