@@ -69,6 +69,10 @@ class DataPipeline:
             self.db_manager.upload_to_db(self.extracted_data_dict)
 
     def run_pipeline(self, save_results: bool = False):
+        if len(self.tickers_to_extract.get("pairs")) > 0:
+            LOGGER.info(f"No pairs in config file. Pipeline finished.")
+            return
+
         # gather data
         self.gather_technical_data()
         # compute technical indicators on pairs

@@ -12,52 +12,5 @@ get_existing_tables: |
   WHERE table_schema = 'public';
 get_latest_date: |
   SELECT MAX(date) FROM {table_name};
-
-
-#pairs:
-#  technical:
-#      """
-#          CREATE TABLE "{ table }" (
-#              id SERIAL PRIMARY KEY,
-#              date DATE,
-#              close FLOAT,
-#              high FLOAT,
-#              low FLOAT,
-#              sma FLOAT,
-#              ewma FLOAT,
-#              upperband FLOAT,
-#              lowerband FLOAT,
-#              rsi FLOAT,
-#              macd FLOAT,
-#              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-#          );
-#      """
-#      """
-#          INSERT INTO "{table_name}" (
-#              date DATE,
-#              close FLOAT,
-#              high FLOAT,
-#              low FLOAT,
-#              sma FLOAT,
-#              ewma FLOAT,
-#              upperband FLOAT,
-#              lowerband FLOAT,
-#              rsi FLOAT,
-#              macd FLOAT,
-#          ) VALUES (
-#              '{date}',
-#              {close},
-#              {high},
-#              {low},
-#              {sma},
-#              {ewma},
-#              {upperband},
-#              {lowerband},
-#              {rsi},
-#              {macd});
-#      """
-#  fundamental:
-#currencies:
-#  technical:
-#
-#  fundamental:
+get_top_rows: |
+  SELECT * FROM {table_name} LIMIT {n}
