@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict, List
 import pandas as pd
 from dotenv import load_dotenv
@@ -39,12 +40,28 @@ class DataPipeline:
                 ticker, latest_date
             )
 
+    def get_latest_date(self) -> str:
+        tables_pairs_technical: List[str] = self.db_manager.get_existing_tables(
+            "pairs_technical"
+        )
+        most_recent_date = None
+        for table in tables_pairs_technical:
+            latest_date_table: datetime = datetime.strptime(
+                self.db_manager.get_latest_date(table), "%Y-%m-%d"
+            )
+            # latest_date_table: str = self.db_manager.get_latest_date(table)
+            if most_recent_date is None or most_recent_date > latest_date_table:
+                most_recent_date = latest_date_table
+
+        return None if most_recent_date is None else str(most_recent_date.year)
+
     def gather_data_of_currencies(self):
+        latest_date = self.get_latest_date()
+        LOGGER.info(f"latest date is {latest_date}")
         global_fundamental = GlobalFundamental(
             tickers=self.tickers_to_extract.get("pairs")
         )
-        fundamentals = global_fundamental.get_fundamentals()
-        # todo: get latest date and pass it to function get_fundamentals()
+        fundamentals = global_fundamental.get_fundamentals(start_year=latest_date)
         self.extracted_data_dict["currencies"]["technical"] = fundamentals
 
     def gather_technical_data(self):
@@ -69,7 +86,7 @@ class DataPipeline:
             self.db_manager.upload_to_db(self.extracted_data_dict)
 
     def run_pipeline(self, save_results: bool = False):
-        if len(self.tickers_to_extract.get("pairs")) > 0:
+        if len(self.tickers_to_extract.get("pairs")) == 0:
             LOGGER.info(f"No pairs in config file. Pipeline finished.")
             return
 

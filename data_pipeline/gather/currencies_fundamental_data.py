@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import requests
 import pandas as pd
 
@@ -54,7 +54,7 @@ class GlobalFundamental:
 
     def fetch_data(
         self, country_code: str, indicator_code: str, start_date: str
-    ) -> pd.DataFrame:
+    ) -> Optional[pd.DataFrame]:
         url = f"http://api.worldbank.org/v2/country/{country_code}/indicator/{indicator_code}?format=json&per_page=1000&date={start_date}:2024"
         response = requests.get(url)
         if response.status_code != 200:
@@ -62,6 +62,8 @@ class GlobalFundamental:
                 f"Failed to fetch data for {country_code} and indicator {indicator_code}"
             )
         data = response.json()[1]
+        if data is None:
+            return None
         df = pd.DataFrame(data)[["date", "value"]]
         df["date"] = pd.to_datetime(df["date"])
         df = df.sort_values(by="date")
@@ -89,6 +91,8 @@ class GlobalFundamental:
             country_data = []
             for indicator, indicator_code in self.indicators.items():
                 df = self.fetch_data(country_code, indicator_code, start_year)
+                if df is None:
+                    return {}
                 df_daily = self.resample_to_daily(df).rename(
                     columns={"value": indicator}
                 )
@@ -108,6 +112,6 @@ if __name__ == "__main__":
     tickers = read_config(file_path="config/tickers.yaml").get("pairs")
     # Example usage
     global_fundamental = GlobalFundamental(tickers=tickers)
-    fundamentals = global_fundamental.get_fundamentals("2022")
+    fundamentals = global_fundamental.get_fundamentals("2024")
     for currency, df in fundamentals.items():
         print(f"{currency} data:\n{df.head()}")
