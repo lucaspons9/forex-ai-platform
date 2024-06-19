@@ -41,7 +41,7 @@ class DatabaseManager:
                 LOGGER.info("Waiting for PostgreSQL...")
                 time.sleep(1)
 
-    def get_existing_tables(self) -> List[str]:
+    def get_existing_tables(self, matching_string_name=None) -> List[str]:
         """Get the list of existing tables in the PostgreSQL database.
 
         Returns:
@@ -59,6 +59,13 @@ class DatabaseManager:
         existing_tables = [row[0] for row in cur.fetchall()]
         cur.close()
         conn.close()
+
+        if matching_string_name:
+            result: List[str] = []
+            for table in existing_tables:
+                if table.startswith(matching_string_name):
+                    result.append(table)
+            return result
         return existing_tables
 
     def create_table(self, table_name: str, df: pd.DataFrame):
@@ -161,7 +168,7 @@ class DatabaseManager:
             table_name=table_name
         )
         cur.execute(get_latest_date_sql)
-        latest_date = cur.fetchone()[0]
+        latest_date = str(cur.fetchone()[0])
         cur.close()
         conn.close()
         return latest_date
