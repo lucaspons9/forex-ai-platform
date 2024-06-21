@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from data_pipeline.gather.api_fetch import fetch_ticker_data
 from data_pipeline.gather.currencies_fundamental_data import GlobalFundamental
 from data_pipeline.transform.technical_operations import technical_indicators
+from models.transformations.transform_data_for_models import DataTransformer
 from data_pipeline.utils.actions_on_db import DatabaseManager
 from utils.configs import read_config
 from utils.logger import configure_logger
@@ -22,10 +23,12 @@ class DataPipeline:
         )
         self.db_manager = DatabaseManager()
         ExtractedDataDictType = Dict[str, Dict[str, Dict[str, pd.DataFrame]]]
-        self.extracted_data_dict: ExtractedDataDictType = {
+        data: ExtractedDataDictType = {
             "pairs": {"technical": {}, "fundamental": {}},
             "currencies": {"technical": {}, "fundamental": {}},
         }
+        self.extracted_data_dict = data
+        self.transformed_data_dict = data
 
     def gather_data_of_pairs(self):
         self.db_manager.postgres_running_check()
@@ -49,7 +52,6 @@ class DataPipeline:
             latest_date_table: datetime = datetime.strptime(
                 self.db_manager.get_latest_date(table), "%Y-%m-%d"
             )
-            # latest_date_table: str = self.db_manager.get_latest_date(table)
             if most_recent_date is None or most_recent_date > latest_date_table:
                 most_recent_date = latest_date_table
 
@@ -92,6 +94,7 @@ class DataPipeline:
 
         # gather data
         self.gather_technical_data()
+
         # compute technical indicators on pairs
         self.compute_technical_operators()
         LOGGER.info(f"Finished computing technical operators!!!")
@@ -102,12 +105,13 @@ class DataPipeline:
 
 
 if __name__ == "__main__":
-    ####### for local running
+    ###### for local running
     # import os
+    #
     # app_dir = os.path.dirname(os.path.abspath(__file__))
     # os.chdir(os.path.dirname(app_dir))
     # print(os.getcwd())
-    #######
+    ######
 
     pipeline = DataPipeline()
     pipeline.run_pipeline(save_results=True)
