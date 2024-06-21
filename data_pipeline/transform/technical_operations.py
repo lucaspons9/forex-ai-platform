@@ -18,16 +18,6 @@ def rsi(close, periods):
     return rsi
 
 
-def add_time_periodicity(df):
-    df["Seconds"] = df.index.map(pd.Timestamp.timestamp)
-    day = 60 * 60 * 24
-    year = 365.2425 * day
-    df["Year sin"] = np.sin(df["Seconds"] * (2 * np.pi / year))
-    df["Year cos"] = np.cos(df["Seconds"] * (2 * np.pi / year))
-    df = df.drop("Seconds", axis=1)
-    return df
-
-
 def technical_indicators(data, SMA_days=50, EWMA_days=200, RSI_periods=14):
     """Function to calculate technical indicators"""
     data = data.copy()
