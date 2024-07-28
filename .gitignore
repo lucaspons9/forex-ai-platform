@@ -1,6 +1,9 @@
 # Ignore .env file
 .env
 
+# Ignore the .idea directory
+.idea/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
