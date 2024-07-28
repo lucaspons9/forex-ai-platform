@@ -69,7 +69,7 @@ class DataPipeline:
         self.gather_data_of_pairs()
 
         # gather technical data for currencies
-        self.gather_data_of_currencies()
+        # self.gather_data_of_currencies() # todo 28-07-2024: check changes in worldbank api!
 
     def compute_technical_operators(self):
         for ticker in self.tickers_to_extract.get("pairs"):
