@@ -1,48 +1,6 @@
 # Forex Prediction Project
 
-This project aims to build an accurate forex prediction system. The project is divided into two main parts: data gathering and model configuration and deployment. The architecture leverages Docker for containerization and Airflow for automation of data gathering tasks. The models are built using PyTorch and deployed using FastAPI.
-
-## Project Structure
-
-```plaintext
-forex-prediction/
-├── config/
-│   ├── tables.yaml
-├── dags/
-│   ├── data_pipeline_dag.py
-├── database/
-│   ├── init.sql
-├── data_pipeline/
-│   ├── gather/
-│   │   ├── gather_data.py
-│   │   ├── scrape_web.py
-│   │   ├── api_fetch.py
-│   ├── preprocess/
-│   │   ├── clean_data.py
-│   │   ├── transform_data.py
-│   ├── main.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-├── models/
-│   ├── model.py
-│   ├── train.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-├── app/
-│   ├── main.py
-│   ├── endpoints/
-│   │   ├── predict.py
-│   │   ├── query.py
-│   ├── requirements.txt
-│   ├── Dockerfile
-├── airflow/
-│   ├── dags/
-│   ├── Dockerfile
-│   ├── requirements.txt
-├── docker-compose.yml
-├── .env
-└── README.md
-```
+The objective of this project is to build an accurate forex intelligence platform with clean and complete data. The platform gathers, processes, and organizes forex data from various sources. This data will serve as a foundation for future machine learning models and other analytical tools to generate forex predictions and insights.
 
 ## Getting Started
 
@@ -52,8 +10,31 @@ forex-prediction/
 - Docker Compose
 - Python 3.9+
 - PostgreSQL
+- Poetry
 
 ### Setup
+
+You can set up the project in two ways: using Poetry to run the files individually or using Docker Compose to build the entire structure.
+
+#### Option 1: Using Poetry
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd forex-prediction
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   poetry install
+   ```
+
+3. **Run individual scripts**:
+   ```bash
+   poetry run python path/to/your_script.py
+   ```
+
+#### Option 2: Using Docker Compose
 
 1. **Clone the repository**:
    ```bash
@@ -68,7 +49,7 @@ forex-prediction/
    DB_USER=user
    DB_PASSWORD=password
    DB_NAME=forex
-   AIRFLOW__CORE__FERNET_KEY=your_fernet_key
+   FAST_API_KEY=custom_fastapi_key
    ```
 
 3. **Build and run the Docker containers**:
@@ -76,43 +57,19 @@ forex-prediction/
    docker-compose up --build
    ```
 
-### Components
-
-#### 1. Data Pipeline
-
-- **Gathering**: Scripts for web scraping and API data fetching.
-  - `gather_data.py`
-  - `scrape_web.py`
-  - `api_fetch.py`
-
-- **Preprocessing**: Scripts for cleaning and transforming data.
-  - `clean_data.py`
-  - `transform_data.py`
-
-- **Main script**: Orchestrates data gathering and preprocessing.
-  - `main.py`
-
-#### 2. Models
-
-- **model.py**: PyTorch model definition.
-- **train.py**: Script to train the model.
-
-#### 3. FastAPI Application
-
-- **main.py**: Entry point for the FastAPI application.
-- **endpoints/predict.py**: Endpoint for model predictions.
-- **endpoints/query.py**: Endpoint for querying the database.
-
-#### 4. Airflow
-
-- **data_pipeline_dag.py**: Defines the Airflow DAG for data pipeline automation.
+This command will build and start all the necessary Docker containers, including the database container. The database will be created and fed with the most up-to-date data.
 
 ### Usage
 
 - **Access Airflow**: [http://localhost:8080](http://localhost:8080)
 - **Access FastAPI**: [http://localhost:8000/docs](http://localhost:8000)
-  - `POST /predict` to get model predictions.
-  - `GET /query` to query the database.
+
+#### FastAPI Endpoints
+
+- **GET /health**: Check the health status of the API and the database connection.
+- **GET /tables**: List all existing tables in the database.
+- **GET /latest-dates**: Retrieve the latest date for each table in the database.
+- **POST /top-rows**: Get the top n rows of a specified table. You need to pass the table name and the number of rows in the request body.
 
 ### Deployment
 
@@ -121,11 +78,9 @@ forex-prediction/
 
 ### Contributing
 
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -m 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Open a pull request.
+This is an open-source project, and we welcome contributions from the community.
+
+If you'd like to contribute, please fork the repository and make changes as you'd like. Pull requests are warmly welcome.
 
 ### License
 
