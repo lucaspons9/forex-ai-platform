@@ -110,7 +110,7 @@ forex-prediction/
 ### Usage
 
 - **Access Airflow**: [http://localhost:8080](http://localhost:8080)
-- **Access FastAPI**: [http://localhost:8000](http://localhost:8000)
+- **Access FastAPI**: [http://localhost:8000/docs](http://localhost:8000)
   - `POST /predict` to get model predictions.
   - `GET /query` to query the database.
 

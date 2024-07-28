@@ -47,11 +47,6 @@ class GlobalFundamental:
             if currency in self.currency_mapping
         }
 
-    def load_pairs_from_yaml(self, filepath: str) -> list[str]:
-        with open(filepath, "r") as file:
-            config = yaml.safe_load(file)
-        return config["pairs"]
-
     def fetch_data(
         self, country_code: str, indicator_code: str, start_date: str
     ) -> Optional[pd.DataFrame]:
@@ -112,6 +107,6 @@ if __name__ == "__main__":
     tickers = read_config(file_path="config/tickers.yaml").get("pairs")
     # Example usage
     global_fundamental = GlobalFundamental(tickers=tickers)
-    fundamentals = global_fundamental.get_fundamentals("2024")
+    fundamentals = global_fundamental.get_fundamentals("2015")
     for currency, df in fundamentals.items():
         print(f"{currency} data:\n{df.head()}")
