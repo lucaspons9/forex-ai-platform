@@ -62,7 +62,7 @@ This command will build and start all the necessary Docker containers, including
 ### Usage
 
 - **Access Airflow**: [http://localhost:8080](http://localhost:8080)
-- **Access FastAPI**: [http://localhost:8000/docs](http://localhost:8000)
+- **Access FastAPI**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 #### FastAPI Endpoints
 
