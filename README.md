@@ -1,83 +1,59 @@
-# Forex Intelligence & Prediction Project
+# **Forex Intelligence & Prediction Platform**
 
-Welcome to the **Forex Intelligence & Prediction Project**, an end-to-end solution that:
+The **Forex Intelligence & Prediction Platform** is an end-to-end solution designed to harness financial data and machine learning to make informed forex trading decisions. It combines a **robust data infrastructure** with **advanced predictive models**, enabling systematic trade execution based on data-driven signals.
 
-1. **Builds a robust Forex Intelligence Platform** — a fully automated data pipeline to gather, process, and store forex-related data.
-2. **Implements Machine Learning models and trading strategies** — leveraging the platform’s data to forecast price movements and develop profitable, risk-managed trading systems.
+## 🚀 Project Overview
 
----
+This platform consists of two integrated components:
 
-## 1. Forex Intelligence Platform
-
-### Overview
-This platform is responsible for **fetching, cleaning, and storing** forex data from multiple sources so it’s always up-to-date and ready for analysis. Key components include:
-
-- **Airflow** for job scheduling, ensuring routine data ingestion and database updates.
-- **PostgreSQL** for structured storage of all historical and newly acquired forex data.
-- **FastAPI** for quick data retrieval and health checks, offering a user-friendly interface to the database.
-
-### Core Features
-- **Continuous Data Fetching**: Automated pipelines to pull forex rates, economic indicators, and more.
-- **Clean & Standardized Data**: Consolidates messy or fragmented sources into a coherent schema.
-- **Centralized Storage**: Maintains a PostgreSQL database with relevant tables, each updated by Airflow DAGs.
-- **User-Focused Endpoints**: FastAPI endpoints to explore table lists, retrieve top rows, and track latest data ingestion status.
+1. **Forex Intelligence Platform**: A fully automated data pipeline that gathers, processes, and stores forex-related data in a structured and accessible format.
+2. **Machine Learning & Strategy Development**: A predictive modeling framework that utilizes historical data to generate trading signals, optimize risk management, and backtest profitable strategies.
 
 ---
 
-## 2. Machine Learning & Strategy Development
+## 📡 **1. Forex Intelligence Platform**
+### **Data Infrastructure & Management**
+The Forex Intelligence Platform is responsible for continuously fetching, cleaning, and structuring forex data from multiple sources. It ensures high-quality, up-to-date financial data for analysis and trading strategy development.
 
-### Overview
-Using the Intelligence Platform’s high-quality data, the second part applies advanced **machine learning algorithms** (like LSTMs or other ML models) to forecast forex price movements. The main goals are:
-
-- **Predictive Modeling**: Train, validate, and tune models for short-term or long-term predictions (classification or regression).
-- **Backtesting & Evaluation**: Simulate potential strategies on historical data to gauge performance metrics (accuracy, drawdown, etc.).
-- **Risk Management**: Incorporate dynamic position sizing, stop-loss and trailing stops, partial take-profit, and other protective measures.
-- **Strategy Iteration**: Continuously refine signals, thresholds, and money-management rules for more consistent returns.
-
-This part is currently **under development**, but it already shows promise in generating signals that can be translated into real trades.
+### **Key Features**
+- **Automated Data Ingestion**: Uses **Apache Airflow** to schedule, extract, and update forex data.
+- **Centralized Storage**: Stores structured forex data in a **PostgreSQL** database.
+- **API for Data Access**: A **FastAPI** service provides endpoints to query forex data efficiently.
+- **Scalability & Monitoring**: Designed for seamless deployment with **Docker Compose**, allowing local and cloud execution.
 
 ---
 
-## Getting Started
+## 📊 **2. Machine Learning & Strategy Development**
+### **Predictive Modeling for Forex Trading**
+Leveraging structured data from the intelligence platform, this component applies advanced **machine learning models** (LSTM-based deep learning architectures) to predict market movements and generate actionable trading signals.
 
-You can run this project in two main ways: 
-1. **Locally** via [Poetry](https://python-poetry.org/docs/).
-2. **Containerized** using [Docker Compose](https://docs.docker.com/compose/).
+### **Core Functionalities**
+- **Trend Classification**: Uses **LSTMs** to forecast the probability of an upward, downward, or neutral trend.
+- **Backtesting & Evaluation**: Simulates trading strategies on historical data to assess profitability and risk-adjusted returns.
+- **Risk Management Strategies**: Implements dynamic **position sizing, stop-loss tiers, and volatility-adjusted trade execution**.
+- **Automated Strategy Iteration**: Continuously optimizes signals, thresholds, and risk parameters for better consistency.
 
-### Prerequisites
-- Docker & Docker Compose  
-- Python 3.9+  
-- PostgreSQL  
-- Poetry  
+This system demonstrates how even models with moderate accuracy can yield profitable results when paired with **robust trading rules**.
 
-#### Option 1: Using Poetry
+---
 
-1. **Clone the repository**:
+## 🛠 **Getting Started**
+This platform can be deployed **containerized** using Docker Compose.
+
+### **Prerequisites**
+- Python 3.9+
+- Docker & Docker Compose
+- PostgreSQL
+- Poetry
+
+### **Steps**
+1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd forex-prediction
+   cd forex-intelligence-platform
    ```
-
-2. **Install dependencies**:
-   ```bash
-   poetry install
-   ```
-
-3. **Run individual scripts**:
-   ```bash
-   poetry run python path/to/your_script.py
-   ```
-
-#### Option 2: Using Docker Compose
-
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd forex-prediction
-   ```
-
-2. **Setup environment variables**:
-   Create a `.env` file with the following variables:
+2. Configure environment variables:  
+   Create a `.env` file with:
    ```env
    DB_HOST=db
    DB_USER=user
@@ -85,37 +61,41 @@ You can run this project in two main ways:
    DB_NAME=forex
    FAST_API_KEY=custom_fastapi_key
    ```
-
-3. **Build and run the Docker containers**:
+3. Build and start all services:
    ```bash
    docker-compose up --build
    ```
 
-This command will build and start all the necessary Docker containers, including the database container. The database will be created and fed with the most up-to-date data.
+This will launch the data pipeline, database, and API services in separate containers.
 
-### Usage
+---
 
-- **Access Airflow**: [http://localhost:8080](http://localhost:8080)
-- **Access FastAPI**: [http://localhost:8000/docs](http://localhost:8000)
+🔍 **Usage & API Endpoints**
+- **Access Airflow:** [http://localhost:8080](http://localhost:8080) – Monitor data ingestion tasks.
+- **Access FastAPI:** [http://localhost:8000/docs](http://localhost:8000/docs) – Explore API endpoints.
 
-#### FastAPI Endpoints
+**Example API Endpoints**
 
-- **GET /health**: Check the health status of the API and the database connection.
-- **GET /tables**: List all existing tables in the database.
-- **GET /latest-dates**: Retrieve the latest date for each table in the database.
-- **POST /top-rows**: Get the top n rows of a specified table. You need to pass the table name and the number of rows in the request body.
+| Endpoint              | Description                                                          |
+|-----------------------|----------------------------------------------------------------------|
+| **GET /health**       | Checks API and database connection status.                           |
+| **GET /tables**       | Lists available database tables.                                     |
+| **GET /latest-dates** | Retrieves the latest data update for each table.                     |
+| **POST /top-rows**    | Fetches top rows from a specific table (requires request body).        |
 
-### Deployment
+---
 
-- **Database**: Start with local PostgreSQL. Migrate to AWS RDS for production.
-- **Models**: Deploy using Docker. Consider AWS EC2 or AWS Sagemaker for scalable deployment.
+📈 **Future Enhancements**
+- **Cloud Deployment:** Move PostgreSQL to AWS RDS and deploy models via AWS EC2 or SageMaker.
+- **Reinforcement Learning Strategies:** Integrate RL-based decision-making for adaptive trading strategies.
+- **Sentiment Analysis:** Incorporate news sentiment analysis to improve predictive accuracy.
 
-### Contributing
+---
 
-This is an open-source project, and we welcome contributions from the community.
+🤝 **Contributing**
 
-If you'd like to contribute, please fork the repository and make changes as you'd like. Pull requests are warmly welcome.
-
-### License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+This is an open-source project, and contributions are welcome!  
+To contribute:
+1. Fork the repository.
+2. Create a feature branch (`feature-branch-name`).
+3. Submit a pull request with a detailed explanation.
