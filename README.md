@@ -66,7 +66,7 @@ This platform can be deployed **containerized** using Docker Compose.
    docker-compose up --build
    ```
 
-This will launch the data pipeline, database, and API services in separate containers.
+This command will build and start all the necessary Docker containers, including the database container. The database will be created and fed with the most up-to-date data.
 
 ---
 
